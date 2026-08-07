@@ -16,5 +16,14 @@ jobs:
           # fetching nixpkgs (pinned by flake.lock).
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
 
+      - uses: cachix/cachix-action@v17
+        with:
+          name: freebuff-nix
+          # Token with push access to the freebuff-nix cache. Without it the
+          # action only pulls (read-only) — e.g. for fork PRs.
+          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+          # Also pull prebuilt packages from the nix-community public cache.
+          extraPullNames: nix-community
+
       - name: Run nix flake check
         run: nix flake check

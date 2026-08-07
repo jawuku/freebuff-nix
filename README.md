@@ -117,3 +117,39 @@ targetPkgs = p: with p; [
   git
 ];
 ```
+
+## Binary cache (Cachix)
+
+CI pushes build artifacts to a [Cachix](https://www.cachix.org/) cache named
+`freebuff-nix`, so packages are built once and shared between CI runs and
+local machines.
+
+### CI setup
+
+1. Create the cache: sign in at <https://app.cachix.org> and create a cache
+   named `freebuff-nix`.
+2. Add a Cachix **personal auth token** as the `CACHIX_AUTH_TOKEN` secret in
+   your GitHub repository (Settings → Secrets and variables → Actions).
+3. Done — the `flake-check` workflow pulls from (and, with the token, pushes
+   to) the cache on every run. Fork PRs without the secret fall back to
+   read-only pulling.
+
+### Using the cache locally
+
+To pull prebuilt packages from the cache on your machine:
+
+```sh
+nix run nixpkgs#cachix use freebuff-nix
+```
+
+Or declaratively on NixOS:
+
+```nix
+nix.settings = {
+  substituters = [ "https://freebuff-nix.cachix.org" ];
+  trusted-public-keys = [ "freebuff-nix.cachix.org-1:<PUBLIC KEY>" ];
+};
+```
+
+`cachix use` configures the public key automatically; to get it manually, run
+`cachix show-key` or view the cache page on Cachix.
