@@ -1,2 +1,5 @@
 # Nix build output symlink (points into /nix/store)
 /result
+
+# Scratch prompt notes
+/prompt.txt
