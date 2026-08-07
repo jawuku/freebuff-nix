@@ -1,0 +1,7 @@
+# Normalize line endings: text files are stored as LF in the repository
+# (and checked out as LF) regardless of the platform they were created on.
+* text=auto eol=lf
+
+# Nix lockfile: keep it out of GitHub language/diff stats; it is generated
+# by `nix flake lock` and should not be hand-edited.
+flake.lock linguist-generated
