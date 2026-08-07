@@ -1,0 +1,4 @@
+I'd like to set up an FHS-compliant shell to run the npm package `freebuff`.
+If it were packaged as a Nix app, I could use the `nix run flake.nix` which would execute the shell command `npx freebuff`.
+An optional argument can be added to resume a pre-existing session,
+e.g. `npx freebuff --continue 2026-08-01T15-51-31.852Z`
