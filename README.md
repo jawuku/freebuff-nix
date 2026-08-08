@@ -120,19 +120,32 @@ targetPkgs = p: with p; [
 
 ## Binary cache (Cachix)
 
-CI pushes build artifacts to a [Cachix](https://www.cachix.org/) cache named
-`freebuff-nix`, so packages are built once and shared between CI runs and
-local machines.
+CI builds once and shares the results via a [Cachix](https://www.cachix.org/)
+cache named `freebuff-nix`, so the FHS environment is never rebuilt on local
+machines. Three workflows keep the cache populated:
+
+- **Flake check** — on every push/PR, builds the FHS environment for both
+  `x86_64-linux` (ubuntu-latest) and `aarch64-linux` (native ARM64 runner) and
+  pushes each to the cache. Fork PRs without the `CACHIX_AUTH_TOKEN` secret
+  pull read-only and skip pushing.
+- **Cache flake inputs** (a job of Flake check) — uploads the repo source and
+  the pinned flake inputs to the cache, so builds stay reproducible even if an
+  input disappears upstream. Paths already served by `cache.nixos.org` (such
+  as the nixpkgs tarball) are skipped by Cachix's upstream dedup.
+- **Refresh flake lock** — weekly (Mondays 03:17 UTC) and on demand
+  (`gh workflow run refresh-flake-lock.yml`), runs `nix flake update nixpkgs`
+  and, if the lock moved, commits and pushes it — triggering Flake check to
+  rebuild and cache the fresh environment.
 
 ### CI setup
 
 1. Create the cache: sign in at <https://app.cachix.org> and create a cache
    named `freebuff-nix`.
-2. Add a Cachix **personal auth token** as the `CACHIX_AUTH_TOKEN` secret in
-   your GitHub repository (Settings → Secrets and variables → Actions).
-3. Done — the `flake-check` workflow pulls from (and, with the token, pushes
-   to) the cache on every run. Fork PRs without the secret fall back to
-   read-only pulling.
+2. Add a Cachix auth token (from the cache's **Access tokens**, or a personal
+   token) as the `CACHIX_AUTH_TOKEN` secret in your GitHub repository (Settings
+   → Secrets and variables → Actions).
+3. Done — the workflows above pull from (and, with the token, push to) the
+   cache automatically.
 
 ### Using the cache locally
 
