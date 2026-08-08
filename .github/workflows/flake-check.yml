@@ -40,24 +40,16 @@ jobs:
           nix build . --no-link --print-out-paths \
             | cachix push freebuff-nix
 
-  # Build the aarch64-linux FHS environment (under QEMU emulation, since the
-  # runner is x86_64) and push it to the cache so ARM machines never rebuild it.
+  # Build the aarch64-linux FHS environment on a native ARM64 hosted runner and
+  # push it to the cache so ARM machines never rebuild it.
   build-aarch64:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@v5
-
-      # Register qemu-aarch64 in binfmt_misc on the runner host, which lets the
-      # Nix daemon build and run aarch64-linux derivations on this x86_64 runner.
-      - name: Enable aarch64 emulation
-        run: docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
 
       - uses: cachix/install-nix-action@v31
         with:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
-          # Tell Nix it may realise aarch64-linux derivations on this machine.
-          extra_nix_config: |
-            extra-platforms = aarch64-linux
 
       - uses: cachix/cachix-action@v17
         with:
