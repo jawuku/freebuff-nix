@@ -1,0 +1,40 @@
+name: Refresh flake lock
+
+on:
+  schedule:
+    # Weekly: Monday 03:17 UTC. Keeps the pinned nixpkgs (and therefore the
+    # cached FHS environments) fresh as nixos-unstable moves.
+    - cron: '17 3 * * 1'
+  # Also run manually, e.g.: gh workflow run refresh-flake-lock.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: cachix/install-nix-action@v31
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update the nixpkgs input
+        run: nix flake update nixpkgs
+
+      # Pushing the updated flake.lock triggers the main Flake check workflow,
+      # which rebuilds both platforms and pushes the fresh artifacts (and the
+      # new nixpkgs input) to the freebuff-nix Cachix cache.
+      - name: Commit and push the updated flake.lock
+        run: |
+          if git diff --quiet flake.lock; then
+            echo "flake.lock is already up to date — nothing to do"
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add flake.lock
+            git commit -m "chore: refresh the pinned nixpkgs input"
+            git push
+          fi
