@@ -42,12 +42,46 @@ jobs:
 
       # Build the FHS environment for this matrix system and upload it (with
       # its closure) to the freebuff-nix Cachix cache, so CI runs and other
-      # machines never rebuild it. Requires the CACHIX_AUTH_TOKEN secret;
-      # without it cachix-action above still pulls read-only.
+      # machines never rebuild it.
       - name: Build and push the freebuff FHS environment
         # pipefail so a failing `nix build` fails the job even though its
-        # output is piped to cachix push.
+        # output is piped to cachix push. On fork PRs the token secret is
+        # absent, so skip the push instead of failing the job.
         run: |
           set -euo pipefail
-          nix build .#packages.${{ matrix.system }}.default --no-link --print-out-paths \
-            | cachix push freebuff-nix
+          if cachix doctor 2>/dev/null | grep -q 'Auth token from config'; then
+            nix build .#packages.${{ matrix.system }}.default --no-link --print-out-paths \
+              | cachix push freebuff-nix
+          else
+            echo "No Cachix auth token (fork PR) — skipping push"
+          fi
+
+  # Flake inputs are downloaded from the internet and can disappear; upload
+  # them (the repo source plus the pinned nixpkgs tarball) so this flake stays
+  # reproducible forever. Runs once, independently of the per-platform builds.
+  cache-inputs:
+    name: Cache flake inputs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: cachix/install-nix-action@v31
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: cachix/cachix-action@v17
+        with:
+          name: freebuff-nix
+          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+          extraPullNames: nix-community
+
+      - name: Push flake inputs to the cache
+        run: |
+          set -euo pipefail
+          if cachix doctor 2>/dev/null | grep -q 'Auth token from config'; then
+            nix flake archive --json \
+              | jq -r '.path, (.inputs | to_entries[].value.path)' \
+              | cachix push freebuff-nix
+          else
+            echo "No Cachix auth token (fork PR) — skipping input push"
+          fi
