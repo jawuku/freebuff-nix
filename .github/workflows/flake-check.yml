@@ -5,8 +5,20 @@ on:
   pull_request:
 
 jobs:
-  flake-check:
-    runs-on: ubuntu-latest
+  build-and-push:
+    name: ${{ matrix.system }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      # Both platforms report independently (an aarch64 failure doesn't
+      # cancel the x86_64 result and vice versa).
+      fail-fast: false
+      matrix:
+        include:
+          - system: x86_64-linux
+            runner: ubuntu-latest
+          # Native ARM64 hosted runner (free for public repos).
+          - system: aarch64-linux
+            runner: ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@v5
 
@@ -28,39 +40,14 @@ jobs:
       - name: Run nix flake check
         run: nix flake check
 
-      # Build the FHS environment and upload it (with its closure) to the
-      # freebuff-nix Cachix cache, so CI runs and other machines never rebuild
-      # it. Requires the CACHIX_AUTH_TOKEN secret; without it cachix-action
-      # above still pulls read-only.
+      # Build the FHS environment for this matrix system and upload it (with
+      # its closure) to the freebuff-nix Cachix cache, so CI runs and other
+      # machines never rebuild it. Requires the CACHIX_AUTH_TOKEN secret;
+      # without it cachix-action above still pulls read-only.
       - name: Build and push the freebuff FHS environment
-        # pipefail so a failing `nix build` fails the job even though its output
-        # is piped to cachix push. Only x86_64-linux is built on this runner.
+        # pipefail so a failing `nix build` fails the job even though its
+        # output is piped to cachix push.
         run: |
           set -euo pipefail
-          nix build . --no-link --print-out-paths \
-            | cachix push freebuff-nix
-
-  # Build the aarch64-linux FHS environment on a native ARM64 hosted runner and
-  # push it to the cache so ARM machines never rebuild it.
-  build-aarch64:
-    runs-on: ubuntu-24.04-arm
-    steps:
-      - uses: actions/checkout@v5
-
-      - uses: cachix/install-nix-action@v31
-        with:
-          github_access_token: ${{ secrets.GITHUB_TOKEN }}
-
-      - uses: cachix/cachix-action@v17
-        with:
-          name: freebuff-nix
-          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
-          extraPullNames: nix-community
-
-      - name: Build and push the aarch64-linux FHS environment
-        # pipefail so a failing `nix build` fails the job even though its output
-        # is piped to cachix push.
-        run: |
-          set -euo pipefail
-          nix build .#packages.aarch64-linux.default --no-link --print-out-paths \
+          nix build .#packages.${{ matrix.system }}.default --no-link --print-out-paths \
             | cachix push freebuff-nix
