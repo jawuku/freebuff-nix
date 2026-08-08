@@ -55,7 +55,7 @@ In your NixOS configuration's `flake.nix`:
         modules = [
           ({ pkgs, ... }: {
             environment.systemPackages = [
-              freebuff-nix.packages.${pkgs.system}.default
+              freebuff-nix.packages.${pkgs.stdenv.hostPlatform.system}.default
             ];
           })
         ];
