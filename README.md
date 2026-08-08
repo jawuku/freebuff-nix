@@ -65,15 +65,15 @@ In your NixOS configuration's `flake.nix`:
 ```
 
 If you haven't pushed this repo yet, use a local input instead of the GitHub
-URL:
+URL (inserting your appropriate username and path):
 
 ```nix
 # Tracks committed state (only committed files are used):
-url = "git+file:///home/jason/freebuff-nix";
+url = "git+file:///home/your-username/path-to/freebuff-nix";
 
 # Or, for quick local iteration that reflects your live working tree
 # (including uncommitted changes, no git required):
-url = "path:/home/jason/freebuff-nix";
+url = "path:/home/your-username/path-to/freebuff-nix";
 ```
 
 ### Rebuild and run
