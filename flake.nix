@@ -3,6 +3,13 @@
 
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
+  # Binary cache for the prebuilt FHS environment (pushed by the flake-check
+  # GitHub Actions workflow; key from the Cachix dashboard).
+  nixConfig = {
+    extra-substituters = [ "https://freebuff-nix.cachix.org" ];
+    extra-trusted-public-keys = [ "freebuff-nix.cachix.org-1:ZwTeY8mrdcioZETLYLupnzLFMH26ZueroQEETf0YOYA=" ];
+  };
+
   outputs =
     { self, nixpkgs }:
     let

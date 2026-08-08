@@ -27,3 +27,15 @@ jobs:
 
       - name: Run nix flake check
         run: nix flake check
+
+      # Build the FHS environment and upload it (with its closure) to the
+      # freebuff-nix Cachix cache, so CI runs and other machines never rebuild
+      # it. Requires the CACHIX_AUTH_TOKEN secret; without it cachix-action
+      # above still pulls read-only.
+      - name: Build and push the freebuff FHS environment
+        # pipefail so a failing `nix build` fails the job even though its output
+        # is piped to cachix push. Only x86_64-linux is built on this runner.
+        run: |
+          set -euo pipefail
+          nix build . --no-link --print-out-paths \
+            | cachix push freebuff-nix

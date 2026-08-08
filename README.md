@@ -41,7 +41,7 @@ In your NixOS configuration's `flake.nix`:
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
     freebuff-nix = {
-      url = "github:your-username/freebuff-nix";
+      url = "github:jawuku/freebuff-nix";
       # Reuse your nixpkgs instead of fetching a second copy.
       inputs.nixpkgs.follows = "nixpkgs";
     };
@@ -147,9 +147,11 @@ Or declaratively on NixOS:
 ```nix
 nix.settings = {
   substituters = [ "https://freebuff-nix.cachix.org" ];
-  trusted-public-keys = [ "freebuff-nix.cachix.org-1:<PUBLIC KEY>" ];
+  trusted-public-keys = [ "freebuff-nix.cachix.org-1:ZwTeY8mrdcioZETLYLupnzLFMH26ZueroQEETf0YOYA=" ];
 };
 ```
 
-`cachix use` configures the public key automatically; to get it manually, run
-`cachix show-key` or view the cache page on Cachix.
+`cachix use` configures the public key automatically; to get it manually, view
+the cache page on Cachix. Note that this flake also declares the cache via a
+`nixConfig` block, so any `nix build` / `nix run` inside the repo pulls from it
+automatically.
