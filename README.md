@@ -1,5 +1,7 @@
 # freebuff-nix
 
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
+
 Run the [`freebuff`](https://www.npmjs.com/package/freebuff) CLI inside an
 FHS-compliant shell using Nix.
 
@@ -168,3 +170,10 @@ nix.settings = {
 the cache page on Cachix. Note that this flake also declares the cache via a
 `nixConfig` block, so any `nix build` / `nix run` inside the repo pulls from it
 automatically.
+
+## License
+
+Licensed under the [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0).
+See the [`LICENSE`](./LICENSE) file for the full terms.
+
+Copyright 2026 Jason Awuku
